@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Author: Fajar Nugroho
+# Copyright: FAMOS Teknologi.
+# Version: 0.1.8
+
+
+clear -x
+user=$(whoami);
+if [[ $user != "root" ]]; then
+  echo ""
+  echo "#################################################################################"
+  echo "#       CAUTION: this installer requires root privileges            #"
+  echo "#       please login as root and run the installer again       #"
+  echo "#################################################################################"
+  echo ""
+  echo;
+  exit 1;
+fi;
+
+echo ""
+echo "################################################################################"
+echo "#    CAUTION: Do not changes or remove default configurations made by FAMOS	#"
+echo "#	      Unless you know what you are doing, missconfigured files could	#"
+echo "#	      Stop the service from running properly.				#"
+echo "#								     FAMOS 2020 #"
+echo "#################################################################################"
+echo ""
+
+read -rp " PostgreSQL version (ex: 11 or 12) : " PGVER
+PGVER=${PGVER:-12}
+read -rp " Database host (default: localhost) : " DBHOST
+DBHOST=${DBHOST:-localhost}
+read -rp " Database name (default: radius) : " DBNAME
+DBNAME=${DBNAME:-radius}
+read -rp " Database user (default: radius) : " DBUSER
+DBUSER=${DBUSER:-radius}
+
+while true; do
+  read -r -s -p " Enter database password : " DBPASS
+  DBPASS=${DBPASS:-radpass}
+  echo
+  read -r -s -p " Enter password (again) : " DBPASS2
+  DBPASS2=${DBPASS2:-radpass}  
+  echo
+  [ "$DBPASS" = "$DBPASS2" ] && break
+  echo "   Your password do not match"
+done
+echo;
+
+
+## INSTALLATION ENV
+export DEBIAN_FRONTEND=noninteractive
+DIST=$(lsb_release -is | tr '{A-Z}' '{a-z}')
+RELEASE=$(lsb_release -cs)
+IP_ADDR=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+IP_INTF=$(ip route get 8.8.8.8 | awk -F"dev " 'NR==1{split($2,a," ");print a[1]}')
+HOSTNAME=$(cat /etc/hostname)
+PG_VER=${PGVER}
+PG_DIR=/etc/postgresql/$PG_VER/main
+DB_HOST=${DBHOST}
+DB_NAME=${DBNAME}
+DB_USER=${DBUSER}
+DB_PASS=${DBPASS}
+RAD_DIR=/etc/freeradius
+
+cat <<EOF > /root/password.txt
+DATABASE HOSTNAME = $DB_HOST
+DATABASE NAME     = $DB_NAME
+DATABASE USERNAME = $DB_USER
+DATABASE PASSWORD = $DB_PASS
+EOF
+
+apt autoremove --purge -y freeradius freeradius freeradius-common freeradius-config freeradius-dhcp \
+  freeradius-postgresql freeradius-rest freeradius-utils  postgresql-$PG_VER \
+  postgresql-client-common postgresql-common postgresql-client-$PG_VER
+
+rm -rf $RAD_DIR
+
+apt-key adv --fetch-keys https://www.postgresql.org/media/keys/ACCC4CF8.asc
+apt-key adv --keyserver keys.gnupg.net --recv-key 0x41382202
+
+echo "deb http://apt.postgresql.org/pub/repos/apt/ $RELEASE-pgdg main" | tee /etc/apt/sources.list.d/postgresql.list
+echo "deb http://packages.networkradius.com/releases/$DIST-$RELEASE $RELEASE main" | tee /etc/apt/sources.list.d/freeradius.list
+
+apt update
+apt -y upgrade
+apt install -y freeradius freeradius freeradius-common freeradius-config freeradius-dhcp \
+  freeradius-postgresql freeradius-rest freeradius-utils  postgresql-$PG_VER \
+  postgresql-client-common postgresql-common postgresql-client-$PG_VER jq curl wget
+
+systemctl stop freeradius.service
+mkdir /etc/freeradius/backup
+cp -vr /etc/freeradius/{*.conf,mods-available,mods-config,policy.d,sites-available} /etc/freeradius/backup
+
+su - postgres bash -c "dropdb "$DB_NAME""
+su - postgres bash -c "dropuser "$DB_USER""
+
+su - postgres bash -c "psql -c \"CREATE USER "$DB_USER" NOSUPERUSER ENCRYPTED PASSWORD '$DB_PASS';\""
+su - postgres bash -c "psql -c \"CREATE DATABASE "$DB_NAME" OWNER "$DB_USER";\""
+su - postgres bash -c "psql -c \"GRANT ALL ON DATABASE "$DB_NAME" TO "$DB_USER";\""
+clear
+su - postgres bash -c "psql -c \"\l "$DB_NAME";\""
+sleep 1
+cp -brv ./scripts/postgresql/pg_hba.conf $PG_DIR/pg_hba.conf
+systemctl restart postgresql.service
+PGPASSWORD=$DB_PASS psql -U "$DB_USER" -d "$DB_NAME" < ./scripts/raddb/sql/init.sql
+
+
+
+find $RAD_DIR/mods-enabled/. -type l -exec unlink {} \;
+find $RAD_DIR/sites-enabled/. -type l -exec unlink {} \;
+
+cp -brvu ./scripts/raddb/radiusd.conf $RAD_DIR/
+cp -brvu ./scripts/raddb/mods-config/ $RAD_DIR/
+cp -brvu ./scripts/raddb/mods-enabled/ $RAD_DIR/
+cp -brvu ./scripts/raddb/sites-enabled/ $RAD_DIR/
+sed -i -e "s/\DB_NAME/$DB_NAME/" -e "s/\DB_USER/$DB_USER/" -e "s/\DB_PASS/$DB_PASS/" $RAD_DIR/mods-enabled/sql
+
+chown -R freerad:freerad $RAD_DIR/*
+systemctl enable freeradius.service
+systemctl start freeradius.service
+
+
+
+
+
+
+clear
+sleep 1
+echo "+==============================================================+"
+echo "|                   YOUR FOOD IS READY TO EAT                  |"
+echo "+==============================================================+"
+echo "   DATABASE HOSTNAME    = $DB_HOST "
+echo "   DATABASE NAME        = $DB_NAME "
+echo "   DATABASE USERNAME    = $DB_USER "
+echo "   DATABASE PASSWORD    = $DB_PASS "
+echo "   SERVER HOSTNAME      = $HOSTNAME "
+echo "   SERVER INTERFACE     = $IP_INTF "
+echo "   SERVER IP ADDRESS    = $IP_ADDR "
+echo "   POSTGRESQL VERSION   = $(/usr/bin/psql --version | grep PostgreSQL | awk 'NR==1{split($3,a," ");print a[1]}')    "
+echo "   FREERADIUS VERSION   = $(/usr/sbin/freeradius -v | grep Version | awk 'NR==2{split($3,a," ");print a[1]}')    "
+echo "+==============================================================+"
+echo "|    all login information are saved in '/root/password.txt'   |"
+echo "+==============================================================+"
+echo ""
+radtest hello world localhost 0 testing123
+
+# RAD_STATS=$(curl -s https://api.github.com/repos/bvantagelimited/freeradius_exporter/releases/latest | jq -r '.assets[0].browser_download_url')
