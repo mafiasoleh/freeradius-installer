@@ -1,0 +1,27 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+sqlippool {
+  sql_module_instance = "sql"
+  dialect = "postgresql"
+  pool_name = "Pool-Name"
+  ippool_table = "radippool"
+  lease_duration = 3600
+  allocate_clear_timeout = 1
+  attribute_name = Framed-IP-Address
+	allow_duplicates = no
+  req_attribute_name = Framed-IP-Address
+  pool_key = "%{NAS-Port}"
+  messages {
+    exists = "Existing IP: %{reply:${..attribute_name}} (did %{Called-Station-Id} cli %{Calling-Station-Id} port %{NAS-Port} user %{User-Name})"
+    success = "Allocated IP: %{reply:${..attribute_name}} from %{control:${..pool_name}} (did %{Called-Station-Id} cli %{Calling-Station-Id} port %{NAS-Port} user %{User-Name})"
+    clear = "Released IP ${..attribute_name} (did %{Called-Station-Id} cli %{Calling-Station-Id} user %{User-Name})"
+    failed = "IP Allocation FAILED from %{control:${..pool_name}} (did %{Called-Station-Id} cli %{Calling-Station-Id} port %{NAS-Port} user %{User-Name})"
+    nopool = "No ${..pool_name} defined (did %{Called-Station-Id} cli %{Calling-Station-Id} port %{NAS-Port} user %{User-Name})"
+  }
+  $INCLUDE ${modconfdir}/sql/ippool/${dialect}/queries.conf
+}

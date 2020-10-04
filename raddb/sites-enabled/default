@@ -1,0 +1,278 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+server default {
+
+  listen {
+    type = auth
+    ipv4addr = *
+    port = 0
+    # clients = per_socket_clients
+    #	recv_buff = 65536
+    limit {
+      max_connections = 256
+      lifetime = 0
+      idle_timeout = 60
+    }
+  }
+
+  listen {
+    type = auth
+    ipv6addr = ::
+    port = 0
+    # clients = per_socket_clients
+    #	recv_buff = 65536
+    limit {
+      max_connections = 256
+      lifetime = 0
+      idle_timeout = 60
+    }
+  }
+
+  listen {
+    type = acct
+    ipv4addr = *
+    port = 0
+    # clients = per_socket_clients
+    limit {
+      max_connections = 256
+      lifetime = 0
+      idle_timeout = 60
+      max_pps = 0
+    }
+  }
+
+  listen {
+    type = acct
+    ipv6addr = ::
+    port = 0
+    # clients = per_socket_clients
+    limit {
+      max_connections = 256
+      lifetime = 0
+      idle_timeout = 60
+      max_pps = 0
+    }
+  }
+
+
+  authorize {
+    filter_username
+    preprocess
+    chap
+    mschap
+    digest
+    suffix
+
+    eap {
+      ok = return
+      # updated = return
+    }
+
+    files
+    
+    sql
+      if (notfound) {
+        update {
+          &reply:Reply-Message := "Login Failed. Please check your Username and Password"
+        }
+        reject
+      }
+        
+      if (reject) {
+        update {
+          &reply:Reply-Message := "Login Failed. Please check your Username and Password"
+        }
+        reject
+      }
+
+    dailycounter 
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} have reached time limit"
+        }
+          reject
+      }
+
+    dailybandwidth
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} daily bandwidth limit exceeded."
+        }
+          reject
+      }
+    
+    monthlycounter
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} have reached time limit"
+        }
+          reject
+      }
+    
+    monthlybandwidth
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} bandwidth limit exceeded."
+        }
+          reject
+      }
+    
+    expire_on_login
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} account has expired"
+        }
+          reject
+      }
+
+    noresetcounter
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} account has expired"
+        }
+          reject
+      }
+
+    accessperiod
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} account has expired"
+        }
+          reject
+      }
+
+    quotabandwidth
+      if (reject) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} bandwidth limit exceeded."
+        }
+          reject
+      }
+        
+    expiration 
+      if (userlock) {
+        update {
+          &reply:Reply-Message := "User %{User-Name} account has expired"
+        }
+          reject
+      }
+
+    logintime
+    # pap
+    
+    Autz-Type Status-Server {
+    }
+  }
+
+
+  authenticate {
+    # Auth-Type PAP {
+    #   pap
+    # }
+
+    Auth-Type CHAP {
+      chap
+    }
+
+    Auth-Type MS-CHAP {
+      mschap
+    }
+
+    mschap
+    digest
+    eap
+  }
+
+
+  preacct {
+    preprocess
+    # acct_counters64
+
+    update request {
+        &FreeRADIUS-Acct-Session-Start-Time = "%{expr: %l - %{%{Acct-Session-Time}:-0} - %{%{Acct-Delay-Time}:-0}}"
+    }
+
+    acct_unique
+    suffix
+    files
+  }
+
+
+  accounting {
+    detail
+    unix
+    # dhcp_sqlippool
+    sqlippool
+    
+    sql
+      if (noop) {
+        ok
+      }
+    
+    exec
+    attr_filter.accounting_response
+    
+    Acct-Type Status-Server {
+    }
+  }
+
+
+  session {
+    sql
+  }
+
+
+  post-auth {
+    if (session-state:User-Name && reply:User-Name && request:User-Name && (reply:User-Name == request:User-Name)) {
+      update reply {
+        &User-Name !* ANY
+      }
+    }
+    update {
+      &reply: += &session-state:
+    }
+
+    sql_session_start
+    # dhcp_sqlippool
+    sqlippool
+    sql
+    exec
+    remove_reply_message_if_eap
+
+    Post-Auth-Type REJECT {
+      # update {
+      #   &reply:Reply-Message = "Login Failed. Please check your username and password"
+      # }
+
+      sql
+      attr_filter.access_reject
+      eap
+      remove_reply_message_if_eap
+    }
+
+    Post-Auth-Type Challenge {
+      remove_reply_message_if_eap
+      attr_filter.access_challenge.post-auth
+    }
+
+    if (EAP-Key-Name && &reply:EAP-Session-Id) {
+      update reply {
+        &EAP-Key-Name := &reply:EAP-Session-Id
+      }
+    }
+  }
+
+
+  pre-proxy {
+  }
+
+
+  post-proxy {
+    eap
+  }
+}

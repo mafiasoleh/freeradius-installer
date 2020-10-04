@@ -1,0 +1,39 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+mschap {
+#	use_mppe = no
+#	require_encryption = yes
+#	require_strong = yes
+#	ntlm_auth = "/path/to/ntlm_auth --request-nt-key --username=%{%{Stripped-User-Name}:-%{%{User-Name}:-None}} --challenge=%{%{mschap:Challenge}:-00} --nt-response=%{%{mschap:NT-Response}:-00}"
+#	ntlm_auth_timeout = 10
+#	winbind_username = "%{mschap:User-Name}"
+#	winbind_domain = "%{mschap:NT-Domain}"
+#	winbind_retry_with_normalised_username = no
+  pool {
+    start = ${thread[pool].start_servers}
+    min = ${thread[pool].min_spare_servers}
+    max = ${thread[pool].max_servers}
+    spare = ${thread[pool].max_spare_servers}
+    uses = 0
+    retry_delay = 30
+    lifetime = 86400
+    cleanup_interval = 300
+    idle_timeout = 600
+  }
+
+  passchange {
+#		ntlm_auth = "/usr/bin/ntlm_auth --helper-protocol=ntlm-change-password-1"
+#		ntlm_auth_username = "username: %{mschap:User-Name}"
+#		ntlm_auth_domain = "nt-domain: %{mschap:NT-Domain}"
+#		local_cpw = "%{exec:/path/to/script %{mschap:User-Name} %{MS-CHAP-New-Cleartext-Password}}"
+#		local_cpw = "%{sql:UPDATE radcheck set value='%{MS-CHAP-New-NT-Password}' where username='%{SQL-User-Name}' and attribute='NT-Password'}"
+  }
+#	use_open_directory = yes
+#	allow_retry = yes
+#	retry_msg = "Re-enter (or reset) the password"
+}

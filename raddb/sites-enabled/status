@@ -1,0 +1,34 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service to running well.					#
+#								     FAMOS 2020 #
+#################################################################################
+
+server status {
+
+  listen {
+    type = status
+    ipv4addr = 127.0.0.1
+    port = 18121
+  }
+
+  listen {
+    type = status
+    ipv6addr = ::1
+    port = 18121
+  }	
+
+  client admin {
+    ipaddr = 127.0.0.1
+    secret = secretfamos
+  }
+
+  authorize {
+    ok
+
+    Autz-Type Status-Server {
+      ok
+    }
+  }
+}

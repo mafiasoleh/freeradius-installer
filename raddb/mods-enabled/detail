@@ -1,0 +1,21 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+detail {
+  filename = ${radacctdir}/%{%{Packet-Src-IP-Address}:-%{Packet-Src-IPv6-Address}}/detail-%Y%m%d
+  #	filename = ${radacctdir}/detail
+  escape_filenames = no
+  permissions = 0600
+  #	group = ${security.group}
+  header = "%t"
+  #	locking = yes
+  #	log_packet_header = yes
+  #suppress {
+    # User-Password
+  #}
+
+}

@@ -1,0 +1,9 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+expiration {
+}

@@ -1,0 +1,120 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+server inner-tunnel {
+
+  listen {
+    type = auth
+    ipv4addr = 127.0.0.1
+    port = 18120
+  }
+
+  listen {
+    type = auth
+    ipv6addr = ::1
+    port = 18120
+  }
+
+  authorize {
+    filter_username
+    #	filter_inner_identity
+    chap
+    mschap
+    #	unix
+    suffix
+    #	ntdomain
+    update control {
+      &Proxy-To-Realm := LOCAL
+    }
+    eap {
+      ok = return
+    }
+    files
+    sql
+    #	smbpasswd
+    # ldap
+    #	daily
+
+    expiration
+    logintime
+    pap
+  }
+
+
+  authenticate {
+    Auth-Type PAP {
+      pap
+    }
+    Auth-Type CHAP {
+      chap
+    }
+    Auth-Type MS-CHAP {
+      mschap
+    }
+    mschap
+    #	pam
+    #	Auth-Type LDAP {
+    #		ldap
+    #	}
+    eap
+  }
+
+  session {
+    # radutmp
+    sql
+  }
+
+
+  post-auth {
+    # cui-inner
+    #	update outer.session-state {
+    #	       User-Name := &User-Name
+    #	}
+    #	reply_log
+    sql
+    #	ldap
+    #	moonshot_host_tid
+    #	moonshot_realm_tid
+    #	moonshot_coi_tid
+    if (0) {
+      update reply {
+        User-Name !* ANY
+        Message-Authenticator !* ANY
+        EAP-Message !* ANY
+        Proxy-State !* ANY
+        MS-MPPE-Encryption-Types !* ANY
+        MS-MPPE-Encryption-Policy !* ANY
+        MS-MPPE-Send-Key !* ANY
+        MS-MPPE-Recv-Key !* ANY
+      }
+      update {
+        &outer.session-state: += &reply:
+      }
+    }
+
+    Post-Auth-Type REJECT {
+      sql
+      attr_filter.access_reject
+      update outer.session-state {
+        &Module-Failure-Message := &request:Module-Failure-Message
+      }
+    }
+  }
+
+
+  pre-proxy {
+    #	files
+    #	attr_filter.pre-proxy
+    #	pre_proxy_log
+  }
+
+  post-proxy {
+    #	post_proxy_log
+    #	attr_filter.post-proxy
+    eap
+  }
+}

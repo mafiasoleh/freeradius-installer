@@ -1,0 +1,43 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+realm IPASS {
+	format = prefix
+	delimiter = "/"
+}
+
+realm suffix {
+	format = suffix
+	delimiter = "@"
+#	trust_router = "localhost"
+#	tr_port = 12309
+#	rp_realm = "realm.example.com"
+#	default_community = "apc.communities.example.com"
+#	rekey_enabled = no
+#	realm_lifetime = 0
+}
+
+realm bangpath {
+	format = prefix
+	delimiter = "!"
+#	trust_router = "localhost"
+#	tr_port = 12309
+#	rp_realm = "realm.example.com"
+#	default_community = "apc.communities.example.com"
+#	rekey_enabled = no
+#	realm_lifetime = 0
+}
+
+realm realmpercent {
+	format = suffix
+	delimiter = "%"
+}
+
+realm ntdomain {
+	format = prefix
+	delimiter = "\\"
+}

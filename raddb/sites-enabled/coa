@@ -1,0 +1,33 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+server coa {
+
+  listen {
+    type = coa
+    ipv4addr = *
+    port = 3799
+    virtual_server = coa
+  }
+
+  listen {
+    type = coa
+    ipv6addr = ::
+    port = 3799
+    virtual_server = coa
+  }
+
+  recv-coa {
+    suffix
+    ok
+  }
+
+  send-coa {
+    ok
+  }
+}
+

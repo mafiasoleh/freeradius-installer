@@ -1,0 +1,15 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+radutmp {
+	filename = ${logdir}/radutmp
+	username = %{User-Name}
+	case_sensitive = yes
+	check_with_nas = yes
+	permissions = 0600
+	caller_id = "yes"
+}

@@ -1,0 +1,38 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+linelog {
+  filename = ${logdir}/linelog
+  escape_filenames = no
+  permissions = 0600
+#	group = ${security.group}
+#	syslog_facility = daemon
+#	syslog_severity = info
+  format = "This is a log message for %{User-Name}"
+  reference = "messages.%{%{reply:Packet-Type}:-default}"
+  messages {
+    default = "Unknown packet type %{Packet-Type}"
+    Access-Accept = "Accepted user: %{User-Name}"
+    Access-Reject = "Rejected user: %{User-Name}"
+    Access-Challenge = "Sent challenge: %{User-Name}"
+  }
+}
+
+linelog log_accounting {
+  format = ""
+  filename = ${logdir}/linelog-accounting
+  permissions = 0600
+  reference = "Accounting-Request.%{%{Acct-Status-Type}:-unknown}"
+  Accounting-Request {
+    Start = "Connect: [%{User-Name}] (did %{Called-Station-Id} cli %{Calling-Station-Id} port %{NAS-Port} ip %{Framed-IP-Address})"
+    Stop = "Disconnect: [%{User-Name}] (did %{Called-Station-Id} cli %{Calling-Station-Id} port %{NAS-Port} ip %{Framed-IP-Address}) %{Acct-Session-Time} seconds"
+    Alive = ""
+    Accounting-On = "NAS %{%{Packet-Src-IP-Address}:-%{Packet-Src-IPv6-Address}} (%{%{NAS-IP-Address}:-%{NAS-IPv6-Address}}) just came online"
+    Accounting-Off = "NAS %{%{Packet-Src-IP-Address}:-%{Packet-Src-IPv6-Address}} (%{%{NAS-IP-Address}:-%{NAS-IPv6-Address}}) just went offline"
+    unknown = "NAS %{%{Packet-Src-IP-Address}:-%{Packet-Src-IPv6-Address}} (%{%{NAS-IP-Address}:-%{NAS-IPv6-Address}}) sent unknown Acct-Status-Type %{Acct-Status-Type}"
+  }
+}

@@ -1,0 +1,16 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+exec echo {
+  wait = yes
+  program = "/bin/echo %{User-Name}"
+  input_pairs = request
+  output_pairs = reply
+  #packet_type = Access-Accept
+  shell_escape = yes
+  #timeout = 10
+}

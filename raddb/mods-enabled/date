@@ -1,0 +1,16 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+date {
+  format = "%b %e %Y %H:%M:%S %Z"
+  #	utc = yes
+}
+
+date wispr2date {
+  format = "%Y-%m-%dT%H:%M:%S"
+  #	utc = yes
+}

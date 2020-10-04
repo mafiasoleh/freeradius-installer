@@ -1,0 +1,17 @@
+#################################################################################
+#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
+#	      Unless you know what you are doing, missconfigured files could	#
+#	      Stop the service from running properly.				#
+#								     FAMOS 2020 #
+#################################################################################
+
+preprocess {
+	moddir = ${modconfdir}/${.:instance}
+	huntgroups = ${moddir}/huntgroups
+	hints = ${moddir}/hints
+	with_ascend_hack = no
+	ascend_channels_per_line = 23
+	with_ntdomain_hack = no
+	with_specialix_jetstream_hack = no
+	with_cisco_vsa_hack = no
+}
