@@ -163,7 +163,7 @@ server default {
       }
 
     logintime
-    # pap
+    pap
     
     Autz-Type Status-Server {
     }
@@ -171,9 +171,9 @@ server default {
 
 
   authenticate {
-    # Auth-Type PAP {
-    #   pap
-    # }
+    Auth-Type PAP {
+      pap
+    }
 
     Auth-Type CHAP {
       chap
