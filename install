@@ -161,7 +161,7 @@ systemctl start freeradius.service
 systemctl enable postgresql.service
 systemctl restart postgresql.service
 
-
+set_password
 clear
 sleep 1
 echo ""

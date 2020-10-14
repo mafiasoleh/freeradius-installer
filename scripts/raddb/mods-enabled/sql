@@ -4,10 +4,10 @@ sql {
   postgresql {
     send_application_name = yes
   }
-	radius_db = "host=localhost port=5432 dbname=radius user=fajar password=fajar123"
+	radius_db = "host=localhost port=5432 dbname=DB_NAME user=DB_USER password=DB_PASS"
 
 # postgresql with ssl 
-#	radius_db = "host=localhost port=5432 dbname=radius user=radius password=raddpass sslmode=verify-full sslcert=/etc/ssl/client.crt sslkey=/etc/ssl/client.key sslrootcert=/etc/ssl/ca.crt" 
+#	radius_db = "host=localhost port=5432 dbname=DB_NAME user=DB_USER password=DB_PASS sslmode=verify-full sslcert=/etc/ssl/client.crt sslkey=/etc/ssl/client.key sslrootcert=/etc/ssl/ca.crt" 
 
   acct_table1 = "radacct"
   acct_table2 = "radacct"
