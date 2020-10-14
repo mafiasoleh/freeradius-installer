@@ -1,16 +1,11 @@
-#################################################################################
-#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
-#	      Unless you know what you are doing, missconfigured files could	#
-#	      Stop the service from running properly.				#
-#								     FAMOS 2020 #
-#################################################################################
-
 eap {
   default_eap_type = md5
   timer_expire = 60
   ignore_unknown_eap_types = no
   cisco_accounting_username_bug = no
   max_sessions = ${max_requests}
+  
+  
   md5 {
   }
   # pwd {
@@ -20,10 +15,12 @@ eap {
     #	virtual_server = "inner-tunnel"
   #}
 
+
   gtc {
   #	challenge = "Password: "
     auth_type = PAP
   }
+
 
   tls-config tls-common {
     private_key_password = whatever
@@ -112,6 +109,7 @@ eap {
   #	send_error = no
   #	identity = "FreeRADIUS"
   }
+
 
   #fast {
   #	tls = tls-common

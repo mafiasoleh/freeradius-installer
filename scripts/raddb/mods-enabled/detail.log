@@ -1,10 +1,3 @@
-#################################################################################
-#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
-#	      Unless you know what you are doing, missconfigured files could	#
-#	      Stop the service from running properly.				#
-#								     FAMOS 2020 #
-#################################################################################
-
 detail auth_log {
   filename = ${radacctdir}/%{%{Packet-Src-IP-Address}:-%{Packet-Src-IPv6-Address}}/auth-detail-%Y%m%d
   permissions = 0600
@@ -28,6 +21,5 @@ detail pre_proxy_log {
 
 detail post_proxy_log {
   filename = ${radacctdir}/%{%{Packet-Src-IP-Address}:-%{Packet-Src-IPv6-Address}}/post-proxy-detail-%Y%m%d
-
   permissions = 0600
 }

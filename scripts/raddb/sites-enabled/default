@@ -1,10 +1,3 @@
-#################################################################################
-#    CAUTION: Do not changes or remove default configurations made by FAMOS	#
-#	      Unless you know what you are doing, missconfigured files could	#
-#	      Stop the service from running properly.				#
-#								     FAMOS 2020 #
-#################################################################################
-
 server default {
 
   listen {
@@ -14,7 +7,7 @@ server default {
     # clients = per_socket_clients
     #	recv_buff = 65536
     limit {
-      max_connections = 256
+      max_connections = 128
       lifetime = 0
       idle_timeout = 60
     }
@@ -27,7 +20,7 @@ server default {
     # clients = per_socket_clients
     #	recv_buff = 65536
     limit {
-      max_connections = 256
+      max_connections = 128
       lifetime = 0
       idle_timeout = 60
     }
@@ -39,7 +32,7 @@ server default {
     port = 0
     # clients = per_socket_clients
     limit {
-      max_connections = 256
+      max_connections = 128
       lifetime = 0
       idle_timeout = 60
       max_pps = 0
@@ -52,7 +45,7 @@ server default {
     port = 0
     # clients = per_socket_clients
     limit {
-      max_connections = 256
+      max_connections = 128
       lifetime = 0
       idle_timeout = 60
       max_pps = 0
