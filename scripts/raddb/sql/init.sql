@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS radcheck (
   Value			text NOT NULL DEFAULT ''
 );
 create index radcheck_UserName on radcheck (UserName,Attribute);
-insert into radcheck (id, UserName, op, Attribute, Value) VALUES ('1', 'hello', ':=', 'Cleartext-Password', 'world')
+insert into radcheck (id, UserName, op, Attribute, Value) VALUES ('1', 'hello', ':=', 'Cleartext-Password', 'world');
 
 CREATE TABLE IF NOT EXISTS radgroupcheck (
   id			serial PRIMARY KEY,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS radreply (
   Value			text NOT NULL DEFAULT ''
 );
 create index radreply_UserName on radreply (UserName,Attribute);
-insert into radreply (id, UserName, op, Attribute, Value) VALUES ('1', 'hello', ':=', 'Reply-Message', 'Hello World!')
+insert into radreply (id, UserName, op, Attribute, Value) VALUES ('1', 'hello', ':=', 'Reply-Message', 'Hello World!');
 
 CREATE TABLE IF NOT EXISTS radusergroup (
   id			serial PRIMARY KEY,
