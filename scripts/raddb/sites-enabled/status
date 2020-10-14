@@ -14,7 +14,7 @@ server status {
 
   client admin {
     ipaddr = 127.0.0.1
-    secret = secretfamos
+    secret = adminsecret
   }
 
   authorize {
