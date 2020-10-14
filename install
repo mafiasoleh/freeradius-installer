@@ -21,9 +21,8 @@ fi;
 echo ""
 echo "+============================================================+"
 echo "|       WELCOME TO FREERADIUS WITH POSTGRESQL INSTALLER      |"
-echo "||"
-echo "||"
-echo "||"
+echo "|  THIS INSTALLER WILL HELP YOU TO INSTALL AND AUTOMATICALLY |"
+echo "|  CONFIGURE YOUR FREERADIUS SERVER WITH POSTGRESQL BACKEND  |"
 echo "+============================================================+"
 echo ""
 
@@ -42,7 +41,7 @@ DB_PASS=${DBPASS}
 RAD_DIR=/etc/freeradius
 }
 
-env_password() {
+set_password () {
 cat <<EOF > /opt/.password.txt
 DATABASE HOSTNAME = $DB_HOST
 DATABASE NAME     = $DB_NAME
@@ -72,100 +71,100 @@ while true; do
 done
 echo;
 
+set_env
 
-
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  remove existing freeradius & postgresql...                |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# apt autoremove --purge -y postgresql-* freeradius-* \
+apt autoremove --purge -y postgresql-* freeradius-*
 
-# rm -rf $RAD_DIR
-
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  adding official freeradius & postgresql repository...     |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# apt-key adv --fetch-keys https://www.postgresql.org/media/keys/ACCC4CF8.asc
-# apt-key adv --keyserver keys.gnupg.net --recv-key 0x41382202
+apt-key adv --fetch-keys https://www.postgresql.org/media/keys/ACCC4CF8.asc
+apt-key adv --keyserver keys.gnupg.net --recv-key 0x41382202
+echo "deb http://apt.postgresql.org/pub/repos/apt/ $RELEASE-pgdg main" | tee /etc/apt/sources.list.d/postgresql.list
+echo "deb http://packages.networkradius.com/releases/$DIST-$RELEASE $RELEASE main" | tee /etc/apt/sources.list.d/freeradius.list
 
-# echo "deb http://apt.postgresql.org/pub/repos/apt/ $RELEASE-pgdg main" | tee /etc/apt/sources.list.d/postgresql.list
-# echo "deb http://packages.networkradius.com/releases/$DIST-$RELEASE $RELEASE main" | tee /etc/apt/sources.list.d/freeradius.list
-
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  installing reeradius server and postgresql server...      |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# apt update
-# apt -y upgrade
-# apt install -y freeradius freeradius freeradius-common freeradius-config freeradius-dhcp \
-#   freeradius-postgresql freeradius-rest freeradius-utils  postgresql-$PG_VER \
-#   postgresql-client-common postgresql-common postgresql-client-$PG_VER jq curl wget
+apt update
+apt -y upgrade
+apt install -y freeradius freeradius freeradius-common freeradius-config freeradius-dhcp \
+  freeradius-postgresql freeradius-rest freeradius-utils  postgresql-$PG_VER \
+  postgresql-client-common postgresql-common postgresql-client-$PG_VER jq curl wget
+sleep 2
 
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  drop old database if exist...                             |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# systemctl stop freeradius.service
-# mkdir /etc/freeradius/backup
-# cp -vr /etc/freeradius/{*.conf,mods-available,mods-config,policy.d,sites-available} /etc/freeradius/backup
+su - postgres bash -c "dropdb "$DB_NAME""
+su - postgres bash -c "dropuser "$DB_USER""
+sleep 1
 
-
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  create new database & import database tables...           |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# su - postgres bash -c "dropdb "$DB_NAME""
-# su - postgres bash -c "dropuser "$DB_USER""
-sleep 1
+su - postgres bash -c "psql -c \"CREATE USER "$DB_USER" NOSUPERUSER ENCRYPTED PASSWORD '$DB_PASS';\""
+su - postgres bash -c "psql -c \"CREATE DATABASE "$DB_NAME" OWNER "$DB_USER";\""
+su - postgres bash -c "psql -c \"GRANT ALL ON DATABASE "$DB_NAME" TO "$DB_USER";\""
+cp -brv ./scripts/postgresql/pg_hba.conf $PG_DIR/pg_hba.conf
+cp -brv ./scripts/postgresql/postgresql.conf $PG_DIR/postgresql.conf
+systemctl restart postgresql.service
+PGPASSWORD=$DB_PASS psql -U "$DB_USER" -d "$DB_NAME" < ./scripts/raddb/sql/init.sql
+sleep 2
 
+
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  configuring freeradius server...                          |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# su - postgres bash -c "psql -c \"CREATE USER "$DB_USER" NOSUPERUSER ENCRYPTED PASSWORD '$DB_PASS';\""
-# su - postgres bash -c "psql -c \"CREATE DATABASE "$DB_NAME" OWNER "$DB_USER";\""
-# su - postgres bash -c "psql -c \"GRANT ALL ON DATABASE "$DB_NAME" TO "$DB_USER";\""
-# clear
-# su - postgres bash -c "psql -c \"\l "$DB_NAME";\""
-# sleep 1
-# cp -brv ./scripts/postgresql/pg_hba.conf $PG_DIR/pg_hba.conf
-# systemctl restart postgresql.service
-# PGPASSWORD=$DB_PASS psql -U "$DB_USER" -d "$DB_NAME" < ./scripts/raddb/sql/init.sql
+systemctl stop freeradius.service
+mkdir /etc/freeradius/backup
+cp -vr /etc/freeradius/{*.conf,mods-available,mods-config,policy.d,sites-available} /etc/freeradius/backup
+find $RAD_DIR/mods-enabled/. -type l -exec unlink {} \;
+find $RAD_DIR/sites-enabled/. -type l -exec unlink {} \;
 
+cp -brvu ./scripts/raddb/radiusd.conf $RAD_DIR/
+cp -brvu ./scripts/raddb/mods-config/ $RAD_DIR/
+cp -brvu ./scripts/raddb/mods-enabled/ $RAD_DIR/
+cp -brvu ./scripts/raddb/sites-enabled/ $RAD_DIR/
+sed -i -e "s/\DB_NAME/$DB_NAME/" -e "s/\DB_USER/$DB_USER/" -e "s/\DB_PASS/$DB_PASS/" $RAD_DIR/mods-enabled/sql
+sleep 2
 
-
+echo ""
 echo "+============================================================+"
-echo "|  all login information are saved in '/root/.password.txt'  |"
+echo "|  restarting all services                                   |"
 echo "+============================================================+"
 echo ""
-sleep 1
-# find $RAD_DIR/mods-enabled/. -type l -exec unlink {} \;
-# find $RAD_DIR/sites-enabled/. -type l -exec unlink {} \;
-
-# cp -brvu ./scripts/raddb/radiusd.conf $RAD_DIR/
-# cp -brvu ./scripts/raddb/mods-config/ $RAD_DIR/
-# cp -brvu ./scripts/raddb/mods-enabled/ $RAD_DIR/
-# cp -brvu ./scripts/raddb/sites-enabled/ $RAD_DIR/
-# sed -i -e "s/\DB_NAME/$DB_NAME/" -e "s/\DB_USER/$DB_USER/" -e "s/\DB_PASS/$DB_PASS/" $RAD_DIR/mods-enabled/sql
-
-# chown -R freerad:freerad $RAD_DIR/*
-# systemctl enable freeradius.service
-# systemctl start freeradius.service
-
-
-
-
+chown -R freerad:freerad $RAD_DIR/*
+systemctl enable freeradius.service
+systemctl start freeradius.service
+systemctl enable postgresql.service
+systemctl restart postgresql.service
 
 
 clear
 sleep 1
+echo ""
 echo "+============================================================+"
 echo "|                YOUR MEAL IS READY TO SERVE!                |"
 echo "+============================================================+"
@@ -183,6 +182,3 @@ echo "|  all login information are saved in '/root/.password.txt'  |"
 echo "+============================================================+"
 echo ""
 sleep 1
-# radtest hello world localhost 0 testing123
-
-# RAD_STATS=$(curl -s https://api.github.com/repos/bvantagelimited/freeradius_exporter/releases/latest | jq -r '.assets[0].browser_download_url')
