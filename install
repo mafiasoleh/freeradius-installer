@@ -42,7 +42,7 @@ RAD_DIR=/etc/freeradius
 }
 
 set_password () {
-cat <<EOF > /opt/.password.txt
+cat <<EOF > /root/.password.txt
 DATABASE HOSTNAME = $DB_HOST
 DATABASE NAME     = $DB_NAME
 DATABASE USERNAME = $DB_USER
