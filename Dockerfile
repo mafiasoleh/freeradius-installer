@@ -1,2 +1,3 @@
 FROM freeradius/freeradius-server:latest
-COPY raddb/ /etc/raddb/
+COPY script/raddb/ /etc/raddb/
+RUN 
